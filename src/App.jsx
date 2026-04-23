@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const AUDIO_LIST = [
   "/audios/1.mp3",
@@ -51,16 +51,45 @@ export default function App() {
   const chunksRef = useRef([]);
   const recordingsRef = useRef([]);
 
+  const audioCacheRef = useRef({});
+  const audioRef = useRef(null);
+
   const fallbackNext = () => {
     setMode("idle");
     setCanNext(true);
   };
+
+  // 🎧 preload audio
+  useEffect(() => {
+    if (list.length === 0) return;
+
+    console.log("Preloading audio...");
+
+    list.forEach((src) => {
+      const audio = new Audio();
+      audio.src = src;
+      audio.preload = "auto";
+
+      audioCacheRef.current[src] = audio;
+    });
+  }, [list]);
+
+  // cleanup
+  useEffect(() => {
+    return () => {
+      Object.values(audioCacheRef.current).forEach((audio) => {
+        audio.pause();
+        audio.src = "";
+      });
+    };
+  }, []);
 
   const startTest = () => {
     const random15 = shuffle(AUDIO_LIST).slice(0, 15);
     setList(random15);
     setStarted(true);
     setIndex(0);
+
     setTimeout(() => playAudio(random15[0]), 300);
   };
 
@@ -70,36 +99,47 @@ export default function App() {
     setMode("playing");
     setCanNext(false);
 
-    const audio = new Audio();
-    audio.src = src;
+    const audio = audioCacheRef.current[src];
+
+    if (!audio) {
+      fallbackNext();
+      return;
+    }
+
+    audioRef.current = audio;
+
+    audio.pause();
+    audio.currentTime = 0;
 
     let started = false;
 
-    audio.oncanplaythrough = () => {
-      if (started) return;
-      started = true;
-
-      audio.play().catch((err) => {
-        console.error("Play failed:", err);
+    const tryPlay = () => {
+      audio.play().then(() => {
+        started = true;
+      }).catch(() => {
         fallbackNext();
       });
     };
 
+    if (audio.readyState >= 3) {
+      tryPlay();
+    } else {
+      audio.oncanplaythrough = tryPlay;
+    }
+
     audio.onended = () => {
-      setTimeout(() => startRecording(), 1000);
+      setTimeout(() => startRecording(), 800);
     };
 
     audio.onerror = () => {
-      console.error("Audio error:", src);
       fallbackNext();
     };
 
     setTimeout(() => {
       if (!started) {
-        console.warn("Audio timeout → skip");
         fallbackNext();
       }
-    }, 5000);
+    }, 4000);
   };
 
   const startRecording = async () => {
@@ -163,13 +203,12 @@ export default function App() {
 
       setTimeout(() => {
         if (!stopped) {
-          console.warn("Force stop recorder");
           mediaRecorder.stop();
         }
       }, (duration + 5) * 1000);
 
     } catch (err) {
-      console.error("Recording error:", err);
+      console.error(err);
       fallbackNext();
     }
   };
@@ -184,6 +223,8 @@ export default function App() {
 
     const nextIndex = index + 1;
     setIndex(nextIndex);
+
+    audioRef.current?.pause();
 
     setTimeout(() => {
       playAudio(list[nextIndex]);
