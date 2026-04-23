@@ -30,7 +30,7 @@ function formatTime(seconds) {
 }
 
 function getRandomTime() {
-  const arr = [6, 5, 4]; // test nhanh
+  const arr = [6, 5, 4];
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -90,14 +90,12 @@ function FinishedScreen() {
       }
 
       draw() {
-        // trail
         this.trail.forEach((p, i) => {
           ctx.beginPath();
           ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255,220,100,${(i / this.trail.length) * 0.5})`;
           ctx.fill();
         });
-        // rocket dot
         if (!this.exploded) {
           ctx.beginPath();
           ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
@@ -114,25 +112,22 @@ function FinishedScreen() {
       ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // launch new rocket every ~700ms
       if (ts - lastLaunch > 700) {
         rockets.push(new Rocket());
         lastLaunch = ts;
       }
 
-      // update & draw rockets
       for (let i = rockets.length - 1; i >= 0; i--) {
         rockets[i].update();
         rockets[i].draw();
         if (rockets[i].exploded && rockets[i].y < -20) rockets.splice(i, 1);
       }
 
-      // update & draw particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.07; // gravity
+        p.vy += 0.07;
         p.alpha -= 0.018;
         p.vx *= 0.98;
         p.vy *= 0.98;
@@ -202,22 +197,16 @@ export default function App() {
     setCanNext(true);
   };
 
-  // 🎧 preload audio
   useEffect(() => {
     if (list.length === 0) return;
-
-    console.log("Preloading audio...");
-
     list.forEach((src) => {
       const audio = new Audio();
       audio.src = src;
       audio.preload = "auto";
-
       audioCacheRef.current[src] = audio;
     });
   }, [list]);
 
-  // cleanup
   useEffect(() => {
     return () => {
       Object.values(audioCacheRef.current).forEach((audio) => {
@@ -232,13 +221,10 @@ export default function App() {
     setList(random15);
     setStarted(true);
     setIndex(0);
-
     setTimeout(() => playAudio(random15[0]), 300);
   };
 
   const playAudio = (src) => {
-    console.log("PLAY:", index);
-
     setMode("playing");
     setCanNext(false);
 
@@ -250,7 +236,6 @@ export default function App() {
     }
 
     audioRef.current = audio;
-
     audio.pause();
     audio.currentTime = 0;
 
@@ -279,15 +264,11 @@ export default function App() {
     };
 
     setTimeout(() => {
-      if (!started) {
-        fallbackNext();
-      }
+      if (!started) fallbackNext();
     }, 4000);
   };
 
   const startRecording = async () => {
-    console.log("RECORD START");
-
     try {
       const duration = getRandomTime();
 
@@ -297,7 +278,6 @@ export default function App() {
       setCanNext(false);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -312,18 +292,12 @@ export default function App() {
         if (stopped) return;
         stopped = true;
 
-        console.log("RECORD STOP");
-
-        const blob = new Blob(chunksRef.current, {
-          type: "audio/webm",
-        });
-
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         recordingsRef.current.push(blob);
 
         setUploading(true);
 
         setTimeout(() => {
-          console.log("UPLOAD DONE");
           setUploading(false);
           setCanNext(true);
         }, 3000);
@@ -335,27 +309,25 @@ export default function App() {
 
       let t = duration;
 
-const interval = setInterval(() => {
-  t--;
+      // Delay nhỏ để React kịp render thanh full 100% trước khi transition bắt đầu
+      setTimeout(() => {
+        const interval = setInterval(() => {
+          t--;
 
-  if (t <= 0) {
-    t = 0;
-    setTime(0); // 🔥 đảm bảo về 0 trước
-    clearInterval(interval);
-
-    setTimeout(() => {
-      mediaRecorder.stop(); // 👉 stop sau 1 tick
-    }, 100);
-
-  } else {
-    setTime(t);
-  }
-}, 1000);
+          if (t <= 0) {
+            clearInterval(interval);
+            setTime(0);
+            setTimeout(() => {
+              mediaRecorder.stop();
+            }, 100);
+          } else {
+            setTime(t);
+          }
+        }, 1000);
+      }, 50);
 
       setTimeout(() => {
-        if (!stopped) {
-          mediaRecorder.stop();
-        }
+        if (!stopped) mediaRecorder.stop();
       }, (duration + 5) * 1000);
 
     } catch (err) {
@@ -374,7 +346,6 @@ const interval = setInterval(() => {
 
     const nextIndex = index + 1;
     setIndex(nextIndex);
-
     audioRef.current?.pause();
 
     setTimeout(() => {
@@ -396,8 +367,6 @@ const interval = setInterval(() => {
     return <FinishedScreen />;
   }
 
-  const progress = (time / maxTime) * 100;
-
   return (
     <div className="container">
       <div className="steps">
@@ -417,7 +386,9 @@ const interval = setInterval(() => {
           className="timer-fill"
           style={{
             width: mode === "recording" ? `${(time / maxTime) * 100}%` : "0%",
-            transition: mode === "recording" && time > 0 ? "width 1s linear" : "none",
+            transition: mode === "recording" && time < maxTime && time > 0
+              ? "width 1s linear"
+              : "none",
           }}
         />
       </div>
