@@ -1,4 +1,8 @@
 import { useRef, useState } from "react";
+import JSZip from "jszip";
+
+const [uploading, setUploading] = useState(false);
+const recordingsRef = useRef([]);
 
 const AUDIO_LIST = [
   "/audios/1.mp3",
@@ -21,6 +25,21 @@ const AUDIO_LIST = [
   "/audios/18.mp3",
 ];
 
+async function downloadAll() {
+  const zip = new JSZip();
+
+  recordingsRef.current.forEach((blob, i) => {
+    zip.file(`record-${i + 1}.webm`, blob);
+  });
+
+  const content = await zip.generateAsync({ type: "blob" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "all-recordings.zip";
+  a.click();
+}
+
 function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
@@ -32,7 +51,7 @@ function formatTime(seconds) {
 }
 
 function getRandomTime() {
-  const arr = [60, 90, 120];
+  const arr = [6, 5, 4];
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -88,17 +107,21 @@ export default function App() {
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, {
-        type: "audio/webm",
-      });
+  const blob = new Blob(chunksRef.current, {
+    type: "audio/webm",
+  });
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `record-${index + 1}.webm`;
-      a.click();
-    };
+  // 👉 lưu lại (không download nữa)
+  recordingsRef.current.push(blob);
 
+  // 👉 show uploading
+  setUploading(true);
+
+  setTimeout(() => {
+    setUploading(false);
+    setCanNext(true); // chỉ enable sau khi "upload xong"
+  }, 3000);
+};
     mediaRecorder.start();
 
     let t = duration;
@@ -109,7 +132,6 @@ export default function App() {
       if (t <= 0) {
         clearInterval(interval);
         mediaRecorder.stop();
-        setCanNext(true);
       }
     }, 1000);
   };
@@ -118,6 +140,9 @@ export default function App() {
     if (!canNext) return;
 
     if (index + 1 >= list.length) {
+      setUploading(true);
+      await downloadAll();
+      setUploading(false);
       setFinished(true);
       return;
     }
@@ -194,6 +219,13 @@ export default function App() {
         {mode === "playing" && "Listening..."}
         {mode === "recording" && "Recording..."}
       </div>
+
+      {uploading && (
+  <div className="overlay">
+    <div className="spinner"></div>
+    <p>Uploading Audio...</p>
+  </div>
+)}
     </div>
   );
 }
