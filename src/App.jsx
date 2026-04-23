@@ -151,10 +151,6 @@ export default function App() {
       setMaxTime(duration);
       setCanNext(false);
 
-      setTimeout(() => {
-  setTime(duration - 0.01);
-}, 50);
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const mediaRecorder = new MediaRecorder(stream);
@@ -259,10 +255,10 @@ const interval = setInterval(() => {
       </h1>
 
       <div className="fireworks">
-        <div className="firework"></div>
-        <div className="firework delay1"></div>
-        <div className="firework delay2"></div>
-      </div>
+  <div className="rocket r1"></div>
+  <div className="rocket r2"></div>
+  <div className="rocket r3"></div>
+</div>
     </div>
   );
 }
@@ -285,12 +281,10 @@ const interval = setInterval(() => {
 
       <div className="timer-bar">
   <div
-    className={`timer-fill ${mode === "recording" ? "animate" : ""}`}
+    key={maxTime} // 🔥 reset animation mỗi câu
+    className="timer-fill-anim"
     style={{
-      width: `${(time / maxTime) * 100}%`,
-      transition: mode === "recording"
-        ? `width ${maxTime}s linear`
-        : "none"
+      animationDuration: `${maxTime}s`
     }}
   />
 </div>
