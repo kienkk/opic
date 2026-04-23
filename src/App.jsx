@@ -25,6 +25,12 @@ function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
 function getRandomTime() {
   const arr = [60, 90, 120];
   return arr[Math.floor(Math.random() * arr.length)];
@@ -171,7 +177,9 @@ export default function App() {
           style={{ width: `${progress}%` }}
         ></div>
 
-        <div className="timer-text">{mode === "recording" ? time : ""}</div>
+        <div className="timer-display">
+  {mode === "recording" ? formatTime(time) : ""}
+</div>
       </div>
 
       {/* BUTTON */}
