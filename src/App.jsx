@@ -176,12 +176,12 @@ export default function App() {
           className="timer-fill"
           style={{ width: `${progress}%` }}
         ></div>
-
-        <div className="timer-display">
-  {mode === "recording" ? formatTime(time) : ""}
-</div>
       </div>
 
+  <div className="timer-display">
+  {mode === "recording" ? formatTime(time) : ""}
+</div>
+      
       {/* BUTTON */}
       <button
         className={`next-btn ${canNext ? "active" : "disabled"}`}
