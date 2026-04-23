@@ -64,22 +64,10 @@ body {
   overflow: hidden;
 }
 
-.timer-fill-anim {
+.timer-fill {
   height: 100%;
   background: #2196f3;
-  width: 100%;
-  animation-name: countdown;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes countdown {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+  border-radius: 10px;
 }
 
 .timer-text {
@@ -197,7 +185,7 @@ body {
   pointer-events: none;
 }
 
-/* rocket bay lên */
+/* rocket bay lÃªn */
 .firework {
   position: absolute;
   bottom: 0;
@@ -225,7 +213,7 @@ body {
   animation: explode 1.2s ease-out forwards;
 }
 
-/* bay lên */
+/* bay lÃªn */
 @keyframes shoot {
   to {
     transform: translateY(-300px);
@@ -233,7 +221,7 @@ body {
   }
 }
 
-/* nổ */
+/* ná»• */
 @keyframes explode {
   0% {
     transform: scale(0.2);
@@ -245,7 +233,7 @@ body {
   }
 }
 
-/* delay để có nhiều pháo */
+/* delay Ä‘á»ƒ cÃ³ nhiá»u phÃ¡o */
 .delay1 {
   left: 30%;
   animation-delay: 0.3s;
@@ -282,12 +270,12 @@ body {
   animation: shoot 1s ease-out forwards;
 }
 
-/* vị trí */
+/* vá»‹ trÃ­ */
 .r1 { left: 30%; }
 .r2 { left: 50%; animation-delay: 0.3s; }
 .r3 { left: 70%; animation-delay: 0.6s; }
 
-/* bay lên */
+/* bay lÃªn */
 @keyframes shoot {
   to {
     transform: translateY(-300px);
@@ -308,7 +296,7 @@ body {
   animation: explode 1s ease-out forwards;
 }
 
-/* delay sync với rocket */
+/* delay sync vá»›i rocket */
 .r1::after { animation-delay: 1s; }
 .r2::after { animation-delay: 1.3s; }
 .r3::after { animation-delay: 1.6s; }
