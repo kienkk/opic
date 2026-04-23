@@ -60,6 +60,12 @@ export default function App() {
   const [time, setTime] = useState(0);
   const [maxTime, setMaxTime] = useState(0);
   const [canNext, setCanNext] = useState(false);
+
+const fallbackNext = () => {
+  setMode("idle");
+  setCanNext(true);
+};
+  
   const [finished, setFinished] = useState(false);
 
   const mediaRecorderRef = useRef(null);
@@ -77,17 +83,45 @@ export default function App() {
   };
 
   const playAudio = (src) => {
-    console.log("PLAY:", index);
+  console.log("PLAY:", index);
+
   setMode("playing");
   setCanNext(false);
 
-  const audio = new Audio(src);
+  const audio = new Audio();
+  audio.src = src;
+
+  let started = false;
+
+  audio.oncanplaythrough = () => {
+    if (started) return;
+    started = true;
+
+    audio.play().catch((err) => {
+      console.error("Play failed:", err);
+      fallbackNext();
+    });
+  };
 
   audio.onended = () => {
     setTimeout(() => {
       startRecording();
-    }, 2000);
+    }, 1000);
   };
+
+  audio.onerror = () => {
+    console.error("Audio error:", src);
+    fallbackNext();
+  };
+
+  // 🔥 failsafe: nếu 5s không play được → skip
+  setTimeout(() => {
+    if (!started) {
+      console.warn("Audio timeout → skip");
+      fallbackNext();
+    }
+  }, 5000);
+};
 
   audio.onerror = () => {
     console.error("Audio error:", src);
@@ -101,7 +135,8 @@ export default function App() {
 };
 
   const startRecording = async () => {
-    console.log("RECORD START");
+  console.log("RECORD START");
+
   try {
     const duration = getRandomTime();
 
@@ -120,8 +155,14 @@ export default function App() {
       chunksRef.current.push(e.data);
     };
 
+    let stopped = false;
+
     mediaRecorder.onstop = () => {
+      if (stopped) return;
+      stopped = true;
+
       console.log("RECORD STOP");
+
       const blob = new Blob(chunksRef.current, {
         type: "audio/webm",
       });
@@ -135,19 +176,14 @@ export default function App() {
         setUploading(false);
         setCanNext(true);
       }, 3000);
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
+      // 🔥 release mic
+      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
     };
 
     mediaRecorder.start();
 
-// ✅ thêm ngay sau đây
-setTimeout(() => {
-  if (!canNext && mode === "recording") {
-    console.warn("Failsafe triggered");
-    setCanNext(true);
-  }
-}, 15000);
-
+    // ⏱ timer
     let t = duration;
     const interval = setInterval(() => {
       t--;
@@ -158,30 +194,36 @@ setTimeout(() => {
         mediaRecorder.stop();
       }
     }, 1000);
+
+    // 🔥 failsafe: nếu recorder không stop
+    setTimeout(() => {
+      if (!stopped) {
+        console.warn("Force stop recorder");
+        mediaRecorder.stop();
+      }
+    }, (duration + 5) * 1000);
+
   } catch (err) {
     console.error("Recording error:", err);
-    setCanNext(true); // fallback
+    setCanNext(true);
   }
 };
 
-  const handleNext = async () => {
-    if (!canNext) return;
+  const handleNext = () => {
+  if (!canNext) return;
 
-    if (index + 1 >= list.length) {
-      setUploading(true);
-      await downloadAll();
-      setUploading(false);
-      setFinished(true);
-      return;
-    }
+  if (index + 1 >= list.length) {
+    setFinished(true); // ✅ chỉ chuyển trang
+    return;
+  }
 
-    const nextIndex = index + 1;
-    setIndex(nextIndex);
+  const nextIndex = index + 1;
+  setIndex(nextIndex);
 
-    setTimeout(() => {
-      playAudio(list[nextIndex]);
-    }, 500);
-  };
+  setTimeout(() => {
+    playAudio(list[nextIndex]);
+  }, 300);
+};
 
   if (!started) {
     return (
