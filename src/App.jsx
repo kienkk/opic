@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import JSZip from "jszip";
 
 const AUDIO_LIST = [
   "/audios/1.mp3",
@@ -22,21 +21,6 @@ const AUDIO_LIST = [
   "/audios/18.mp3",
 ];
 
-async function downloadAll() {
-  const zip = new JSZip();
-
-  recordingsRef.current.forEach((blob, i) => {
-    zip.file(`record-${i + 1}.webm`, blob);
-  });
-
-  const content = await zip.generateAsync({ type: "blob" });
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(content);
-  a.download = "all-recordings.zip";
-  a.click();
-}
-
 function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
@@ -48,7 +32,7 @@ function formatTime(seconds) {
 }
 
 function getRandomTime() {
-  const arr = [6, 5, 4];
+  const arr = [6, 5, 4]; // test nhanh
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -60,170 +44,151 @@ export default function App() {
   const [time, setTime] = useState(0);
   const [maxTime, setMaxTime] = useState(0);
   const [canNext, setCanNext] = useState(false);
-
-const fallbackNext = () => {
-  setMode("idle");
-  setCanNext(true);
-};
-  
   const [finished, setFinished] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
-
-  const [uploading, setUploading] = useState(false);
   const recordingsRef = useRef([]);
+
+  const fallbackNext = () => {
+    setMode("idle");
+    setCanNext(true);
+  };
 
   const startTest = () => {
     const random15 = shuffle(AUDIO_LIST).slice(0, 15);
     setList(random15);
     setStarted(true);
     setIndex(0);
-    setTimeout(() => playAudio(random15[0]), 500);
+    setTimeout(() => playAudio(random15[0]), 300);
   };
 
   const playAudio = (src) => {
-  console.log("PLAY:", index);
+    console.log("PLAY:", index);
 
-  setMode("playing");
-  setCanNext(false);
-
-  const audio = new Audio();
-  audio.src = src;
-
-  let started = false;
-
-  audio.oncanplaythrough = () => {
-    if (started) return;
-    started = true;
-
-    audio.play().catch((err) => {
-      console.error("Play failed:", err);
-      fallbackNext();
-    });
-  };
-
-  audio.onended = () => {
-    setTimeout(() => {
-      startRecording();
-    }, 1000);
-  };
-
-  audio.onerror = () => {
-    console.error("Audio error:", src);
-    fallbackNext();
-  };
-
-  // 🔥 failsafe: nếu 5s không play được → skip
-  setTimeout(() => {
-    if (!started) {
-      console.warn("Audio timeout → skip");
-      fallbackNext();
-    }
-  }, 5000);
-};
-
-  audio.onerror = () => {
-    console.error("Audio error:", src);
-    setCanNext(true); // fallback
-  };
-
-  audio.play().catch((err) => {
-    console.error("Play failed:", err);
-    setCanNext(true); // fallback
-  });
-};
-
-  const startRecording = async () => {
-  console.log("RECORD START");
-
-  try {
-    const duration = getRandomTime();
-
-    setMode("recording");
-    setTime(duration);
-    setMaxTime(duration);
+    setMode("playing");
     setCanNext(false);
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audio = new Audio();
+    audio.src = src;
 
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-    chunksRef.current = [];
+    let started = false;
 
-    mediaRecorder.ondataavailable = (e) => {
-      chunksRef.current.push(e.data);
+    audio.oncanplaythrough = () => {
+      if (started) return;
+      started = true;
+
+      audio.play().catch((err) => {
+        console.error("Play failed:", err);
+        fallbackNext();
+      });
     };
 
-    let stopped = false;
+    audio.onended = () => {
+      setTimeout(() => startRecording(), 1000);
+    };
 
-    mediaRecorder.onstop = () => {
-      if (stopped) return;
-      stopped = true;
+    audio.onerror = () => {
+      console.error("Audio error:", src);
+      fallbackNext();
+    };
 
-      console.log("RECORD STOP");
+    setTimeout(() => {
+      if (!started) {
+        console.warn("Audio timeout → skip");
+        fallbackNext();
+      }
+    }, 5000);
+  };
 
-      const blob = new Blob(chunksRef.current, {
-        type: "audio/webm",
-      });
+  const startRecording = async () => {
+    console.log("RECORD START");
 
-      recordingsRef.current.push(blob);
+    try {
+      const duration = getRandomTime();
 
-      setUploading(true);
+      setMode("recording");
+      setTime(duration);
+      setMaxTime(duration);
+      setCanNext(false);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunksRef.current.push(e.data);
+      };
+
+      let stopped = false;
+
+      mediaRecorder.onstop = () => {
+        if (stopped) return;
+        stopped = true;
+
+        console.log("RECORD STOP");
+
+        const blob = new Blob(chunksRef.current, {
+          type: "audio/webm",
+        });
+
+        recordingsRef.current.push(blob);
+
+        setUploading(true);
+
+        setTimeout(() => {
+          console.log("UPLOAD DONE");
+          setUploading(false);
+          setCanNext(true);
+        }, 3000);
+
+        mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+      };
+
+      mediaRecorder.start();
+
+      let t = duration;
+      const interval = setInterval(() => {
+        t--;
+        setTime(t);
+
+        if (t <= 0) {
+          clearInterval(interval);
+          mediaRecorder.stop();
+        }
+      }, 1000);
 
       setTimeout(() => {
-        console.log("UPLOAD DONE");
-        setUploading(false);
-        setCanNext(true);
-      }, 3000);
+        if (!stopped) {
+          console.warn("Force stop recorder");
+          mediaRecorder.stop();
+        }
+      }, (duration + 5) * 1000);
 
-      // 🔥 release mic
-      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
-    };
-
-    mediaRecorder.start();
-
-    // ⏱ timer
-    let t = duration;
-    const interval = setInterval(() => {
-      t--;
-      setTime(t);
-
-      if (t <= 0) {
-        clearInterval(interval);
-        mediaRecorder.stop();
-      }
-    }, 1000);
-
-    // 🔥 failsafe: nếu recorder không stop
-    setTimeout(() => {
-      if (!stopped) {
-        console.warn("Force stop recorder");
-        mediaRecorder.stop();
-      }
-    }, (duration + 5) * 1000);
-
-  } catch (err) {
-    console.error("Recording error:", err);
-    setCanNext(true);
-  }
-};
+    } catch (err) {
+      console.error("Recording error:", err);
+      fallbackNext();
+    }
+  };
 
   const handleNext = () => {
-  if (!canNext) return;
+    if (!canNext) return;
 
-  if (index + 1 >= list.length) {
-    setFinished(true); // ✅ chỉ chuyển trang
-    return;
-  }
+    if (index + 1 >= list.length) {
+      setFinished(true);
+      return;
+    }
 
-  const nextIndex = index + 1;
-  setIndex(nextIndex);
+    const nextIndex = index + 1;
+    setIndex(nextIndex);
 
-  setTimeout(() => {
-    playAudio(list[nextIndex]);
-  }, 300);
-};
+    setTimeout(() => {
+      playAudio(list[nextIndex]);
+    }, 300);
+  };
 
   if (!started) {
     return (
@@ -243,41 +208,30 @@ const fallbackNext = () => {
     );
   }
 
-  // % width progress
   const progress = (time / maxTime) * 100;
 
   return (
     <div className="container">
-      {/* 🔢 STEP LIST */}
       <div className="steps">
         {Array.from({ length: 15 }).map((_, i) => (
-          <div
-            key={i}
-            className={`step ${i === index ? "active" : ""}`}
-          >
+          <div key={i} className={`step ${i === index ? "active" : ""}`}>
             {i + 1}
           </div>
         ))}
       </div>
 
-      {/* 🖼 IMAGE */}
       <div className="image-box">
         <img src="/image.jpg" alt="" />
       </div>
 
-      {/* ⏱ TIMER BAR */}
       <div className="timer-bar">
-        <div
-          className="timer-fill"
-          style={{ width: `${progress}%` }}
-        ></div>
+        <div className="timer-fill" style={{ width: `${progress}%` }} />
       </div>
 
-  <div className="timer-display">
-  {mode === "recording" ? formatTime(time) : ""}
-</div>
-      
-      {/* BUTTON */}
+      <div className="timer-display">
+        {mode === "recording" ? formatTime(time) : ""}
+      </div>
+
       <button
         className={`next-btn ${canNext ? "active" : "disabled"}`}
         onClick={handleNext}
@@ -291,11 +245,11 @@ const fallbackNext = () => {
       </div>
 
       {uploading && (
-  <div className="overlay">
-    <div className="spinner"></div>
-    <p>Uploading Audio...</p>
-  </div>
-)}
+        <div className="overlay">
+          <div className="spinner"></div>
+          <p>Uploading Audio...</p>
+        </div>
+      )}
     </div>
   );
 }
