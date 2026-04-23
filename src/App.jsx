@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 const AUDIO_LIST = [
   "/audios/1.mp3",
@@ -25,19 +25,24 @@ function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
+function getRandomTime() {
+  const arr = [60, 90, 120];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export default function App() {
   const [started, setStarted] = useState(false);
   const [list, setList] = useState([]);
   const [index, setIndex] = useState(0);
-  const [mode, setMode] = useState("idle"); // playing | recording
-  const [time, setTime] = useState(20);
+  const [mode, setMode] = useState("idle");
+  const [time, setTime] = useState(0);
+  const [maxTime, setMaxTime] = useState(0);
   const [canNext, setCanNext] = useState(false);
   const [finished, setFinished] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
 
-  // Start test
   const startTest = () => {
     const random15 = shuffle(AUDIO_LIST).slice(0, 15);
     setList(random15);
@@ -46,7 +51,6 @@ export default function App() {
     setTimeout(() => playAudio(random15[0]), 500);
   };
 
-  // Play audio
   const playAudio = (src) => {
     setMode("playing");
     setCanNext(false);
@@ -54,25 +58,22 @@ export default function App() {
     const audio = new Audio(src);
 
     audio.onended = () => {
-      setTimeout(() => {
-        startRecording();
-      }, 2000);
+      setTimeout(() => startRecording(), 2000);
     };
 
     audio.play();
   };
 
-  // Start recording
   const startRecording = async () => {
+    const duration = getRandomTime(); // 🎯 random time
     setMode("recording");
-    setTime(20);
+    setTime(duration);
+    setMaxTime(duration);
     setCanNext(false);
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
-
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mediaRecorder = new MediaRecorder(stream);
+
     mediaRecorderRef.current = mediaRecorder;
     chunksRef.current = [];
 
@@ -94,8 +95,7 @@ export default function App() {
 
     mediaRecorder.start();
 
-    // Timer
-    let t = 20;
+    let t = duration;
     const interval = setInterval(() => {
       t--;
       setTime(t);
@@ -108,7 +108,6 @@ export default function App() {
     }, 1000);
   };
 
-  // Next
   const handleNext = () => {
     if (!canNext) return;
 
@@ -143,15 +142,37 @@ export default function App() {
     );
   }
 
+  // % width progress
+  const progress = (time / maxTime) * 100;
+
   return (
     <div className="container">
-      {/* IMAGE */}
-      <div className="image-box">
-        <img src="/image.jpg" alt="visual" />
+      {/* 🔢 STEP LIST */}
+      <div className="steps">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className={`step ${i === index ? "active" : ""}`}
+          >
+            {i + 1}
+          </div>
+        ))}
       </div>
 
-      {/* TIMER */}
-      <div className="timer">{mode === "recording" ? time : "--"}</div>
+      {/* 🖼 IMAGE */}
+      <div className="image-box">
+        <img src="/image.jpg" alt="" />
+      </div>
+
+      {/* ⏱ TIMER BAR */}
+      <div className="timer-bar">
+        <div
+          className="timer-fill"
+          style={{ width: `${progress}%` }}
+        ></div>
+
+        <div className="timer-text">{mode === "recording" ? time : ""}</div>
+      </div>
 
       {/* BUTTON */}
       <button
