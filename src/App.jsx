@@ -1,9 +1,6 @@
 import { useRef, useState } from "react";
 import JSZip from "jszip";
 
-const [uploading, setUploading] = useState(false);
-const recordingsRef = useRef([]);
-
 const AUDIO_LIST = [
   "/audios/1.mp3",
   "/audios/2.mp3",
@@ -67,6 +64,9 @@ export default function App() {
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+
+  const [uploading, setUploading] = useState(false);
+  const recordingsRef = useRef([]);
 
   const startTest = () => {
     const random15 = shuffle(AUDIO_LIST).slice(0, 15);
