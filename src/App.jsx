@@ -189,15 +189,23 @@ export default function App() {
       mediaRecorder.start();
 
       let t = duration;
-      const interval = setInterval(() => {
-        t--;
-        setTime(t);
 
-        if (t <= 0) {
-          clearInterval(interval);
-          mediaRecorder.stop();
-        }
-      }, 1000);
+const interval = setInterval(() => {
+  t--;
+
+  if (t <= 0) {
+    t = 0;
+    setTime(0); // 🔥 đảm bảo về 0 trước
+    clearInterval(interval);
+
+    setTimeout(() => {
+      mediaRecorder.stop(); // 👉 stop sau 1 tick
+    }, 100);
+
+  } else {
+    setTime(t);
+  }
+}, 1000);
 
       setTimeout(() => {
         if (!stopped) {
@@ -240,12 +248,16 @@ export default function App() {
   }
 
   if (finished) {
-    return (
-      <div className="container">
-        <h1>THANK YOU</h1>
-      </div>
-    );
-  }
+  return (
+    <div className="container">
+      <h1 className="congrats">
+        🎉 Congratulations You Have Completed The Test 🎉
+      </h1>
+
+      <div className="confetti"></div>
+    </div>
+  );
+}
 
   const progress = (time / maxTime) * 100;
 
