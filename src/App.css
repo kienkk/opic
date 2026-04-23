@@ -103,3 +103,9 @@ body {
   border: none;
   border-radius: 10px;
 }
+
+.timer-display {
+  font-size: 18px;
+  color: black;
+  text-align: center;
+}
