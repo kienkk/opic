@@ -1,8 +1,8 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  background: #111;
-  color: white;
+  background: white;
+  color: black;
 }
 
 .container {
@@ -15,11 +15,37 @@ body {
   padding: 20px;
 }
 
+/* STEP LIST */
+.steps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.step {
+  width: 28px;
+  height: 28px;
+  background: orange;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  opacity: 0.5;
+  font-size: 12px;
+}
+
+.step.active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* IMAGE */
 .image-box {
   width: 80vw;
   max-width: 300px;
   aspect-ratio: 1 / 1;
-  background: #222;
 }
 
 .image-box img {
@@ -28,20 +54,40 @@ body {
   object-fit: cover;
 }
 
-.timer {
-  font-size: 64px;
-  font-weight: bold;
+/* TIMER BAR */
+.timer-bar {
+  width: 80vw;
+  max-width: 300px;
+  height: 20px;
+  background: #ddd;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
+.timer-fill {
+  height: 100%;
+  background: #2196f3;
+  transition: width 1s linear;
+}
+
+.timer-text {
+  position: absolute;
+  right: 8px;
+  bottom: -18px;
+  font-size: 12px;
+}
+
+/* BUTTON */
 .next-btn {
-  padding: 15px 30px;
-  font-size: 18px;
+  padding: 12px 30px;
+  font-size: 16px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .next-btn.disabled {
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
 .next-btn.active {
@@ -49,6 +95,7 @@ body {
   color: white;
 }
 
+/* START */
 .start-btn {
   padding: 20px 40px;
   font-size: 20px;
