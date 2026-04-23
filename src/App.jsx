@@ -151,6 +151,10 @@ export default function App() {
       setMaxTime(duration);
       setCanNext(false);
 
+      setTimeout(() => {
+  setTime(duration - 0.01);
+}, 50);
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const mediaRecorder = new MediaRecorder(stream);
@@ -254,7 +258,11 @@ const interval = setInterval(() => {
         🎉 Congratulations You Have Completed The Test 🎉
       </h1>
 
-      <div className="confetti"></div>
+      <div className="fireworks">
+        <div className="firework"></div>
+        <div className="firework delay1"></div>
+        <div className="firework delay2"></div>
+      </div>
     </div>
   );
 }
@@ -276,8 +284,16 @@ const interval = setInterval(() => {
       </div>
 
       <div className="timer-bar">
-        <div className="timer-fill" style={{ width: `${progress}%` }} />
-      </div>
+  <div
+    className={`timer-fill ${mode === "recording" ? "animate" : ""}`}
+    style={{
+      width: `${(time / maxTime) * 100}%`,
+      transition: mode === "recording"
+        ? `width ${maxTime}s linear`
+        : "none"
+    }}
+  />
+</div>
 
       <div className="timer-display">
         {mode === "recording" ? formatTime(time) : ""}
