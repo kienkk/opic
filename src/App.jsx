@@ -77,28 +77,42 @@ export default function App() {
   };
 
   const playAudio = (src) => {
-    setMode("playing");
-    setCanNext(false);
+    console.log("PLAY:", index);
+  setMode("playing");
+  setCanNext(false);
 
-    const audio = new Audio(src);
+  const audio = new Audio(src);
 
-    audio.onended = () => {
-      setTimeout(() => startRecording(), 2000);
-    };
-
-    audio.play();
+  audio.onended = () => {
+    setTimeout(() => {
+      startRecording();
+    }, 2000);
   };
 
+  audio.onerror = () => {
+    console.error("Audio error:", src);
+    setCanNext(true); // fallback
+  };
+
+  audio.play().catch((err) => {
+    console.error("Play failed:", err);
+    setCanNext(true); // fallback
+  });
+};
+
   const startRecording = async () => {
-    const duration = getRandomTime(); // 🎯 random time
+    console.log("RECORD START");
+  try {
+    const duration = getRandomTime();
+
     setMode("recording");
     setTime(duration);
     setMaxTime(duration);
     setCanNext(false);
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
 
+    const mediaRecorder = new MediaRecorder(stream);
     mediaRecorderRef.current = mediaRecorder;
     chunksRef.current = [];
 
@@ -107,22 +121,32 @@ export default function App() {
     };
 
     mediaRecorder.onstop = () => {
-  const blob = new Blob(chunksRef.current, {
-    type: "audio/webm",
-  });
+      console.log("RECORD STOP");
+      const blob = new Blob(chunksRef.current, {
+        type: "audio/webm",
+      });
 
-  // 👉 lưu lại (không download nữa)
-  recordingsRef.current.push(blob);
+      recordingsRef.current.push(blob);
 
-  // 👉 show uploading
-  setUploading(true);
+      setUploading(true);
 
-  setTimeout(() => {
-    setUploading(false);
-    setCanNext(true); // chỉ enable sau khi "upload xong"
-  }, 3000);
-};
+      setTimeout(() => {
+        console.log("UPLOAD DONE");
+        setUploading(false);
+        setCanNext(true);
+      }, 3000);
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    };
+
     mediaRecorder.start();
+
+// ✅ thêm ngay sau đây
+setTimeout(() => {
+  if (!canNext && mode === "recording") {
+    console.warn("Failsafe triggered");
+    setCanNext(true);
+  }
+}, 15000);
 
     let t = duration;
     const interval = setInterval(() => {
@@ -134,7 +158,11 @@ export default function App() {
         mediaRecorder.stop();
       }
     }, 1000);
-  };
+  } catch (err) {
+    console.error("Recording error:", err);
+    setCanNext(true); // fallback
+  }
+};
 
   const handleNext = async () => {
     if (!canNext) return;
