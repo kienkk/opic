@@ -136,7 +136,7 @@ export default function App() {
     }, 1000);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canNext) return;
 
     if (index + 1 >= list.length) {
