@@ -17,8 +17,6 @@ const AUDIO_LIST = [
   "/audios/14.mp3",
   "/audios/15.mp3",
   "/audios/16.mp3",
-  "/audios/17.mp3",
-  "/audios/18.mp3",
 ];
 
 function shuffle(array) {
