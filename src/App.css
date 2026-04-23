@@ -70,23 +70,18 @@ body {
   border-radius: 10px;
 }
 
-.timer-text {
-  position: absolute;
-  right: 8px;
-  bottom: -18px;
-  font-size: 12px;
-}
-
 /* BUTTON */
 .next-btn {
   padding: 12px 30px;
   font-size: 16px;
   border: none;
   border-radius: 8px;
+  cursor: pointer;
 }
 
 .next-btn.disabled {
   opacity: 0.3;
+  cursor: default;
 }
 
 .next-btn.active {
@@ -101,6 +96,7 @@ body {
   background: #00c853;
   border: none;
   border-radius: 10px;
+  cursor: pointer;
 }
 
 .timer-display {
@@ -135,187 +131,4 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.congrats {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.confetti {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.confetti::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image:
-    radial-gradient(circle, #ff5252 2px, transparent 2px),
-    radial-gradient(circle, #ffeb3b 2px, transparent 2px),
-    radial-gradient(circle, #4caf50 2px, transparent 2px),
-    radial-gradient(circle, #2196f3 2px, transparent 2px);
-  background-size: 40px 40px;
-  animation: confetti-fall 3s linear infinite;
-  opacity: 0.6;
-}
-
-@keyframes confetti-fall {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-
-.fireworks {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* rocket bay lÃªn */
-.firework {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 4px;
-  height: 20px;
-  background: white;
-  animation: shoot 1s ease-out forwards;
-}
-
-.firework::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -20px;
-  width: 40px;
-  height: 40px;
-  opacity: 0;
-  border-radius: 50%;
-  box-shadow:
-    0 0 5px red,
-    0 0 10px yellow,
-    0 0 15px blue,
-    0 0 20px green;
-  animation: explode 1.2s ease-out forwards;
-}
-
-/* bay lÃªn */
-@keyframes shoot {
-  to {
-    transform: translateY(-300px);
-    opacity: 0;
-  }
-}
-
-/* ná»• */
-@keyframes explode {
-  0% {
-    transform: scale(0.2);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-}
-
-/* delay Ä‘á»ƒ cÃ³ nhiá»u phÃ¡o */
-.delay1 {
-  left: 30%;
-  animation-delay: 0.3s;
-}
-.delay1::after {
-  animation-delay: 0.3s;
-}
-
-.delay2 {
-  left: 70%;
-  animation-delay: 0.6s;
-}
-.delay2::after {
-  animation-delay: 0.6s;
-}
-
-/* container */
-.fireworks {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* rocket */
-.rocket {
-  position: absolute;
-  bottom: 0;
-  width: 3px;
-  height: 20px;
-  background: white;
-  animation: shoot 1s ease-out forwards;
-}
-
-/* vá»‹ trÃ­ */
-.r1 { left: 30%; }
-.r2 { left: 50%; animation-delay: 0.3s; }
-.r3 { left: 70%; animation-delay: 0.6s; }
-
-/* bay lÃªn */
-@keyframes shoot {
-  to {
-    transform: translateY(-300px);
-    opacity: 0;
-  }
-}
-
-/* explosion */
-.rocket::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -25px;
-  width: 50px;
-  height: 50px;
-  opacity: 0;
-  border-radius: 50%;
-  animation: explode 1s ease-out forwards;
-}
-
-/* delay sync vá»›i rocket */
-.r1::after { animation-delay: 1s; }
-.r2::after { animation-delay: 1.3s; }
-.r3::after { animation-delay: 1.6s; }
-
-@keyframes explode {
-  0% {
-    transform: scale(0.2);
-    opacity: 1;
-    box-shadow:
-      0 0 5px red,
-      0 0 10px yellow,
-      0 0 15px blue;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-    box-shadow:
-      0 0 10px red,
-      0 0 20px yellow,
-      0 0 30px blue;
-  }
 }
