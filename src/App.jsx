@@ -358,7 +358,7 @@ function FinishedScreen() {
           fontWeight: "bold", textShadow: "0 0 20px rgba(255,220,100,0.8)",
           padding: "0 20px", margin: 0,
         }}>
-          🎉 Congratulations!<br />You Have Completed The Test 🎉
+          🎉 Congratulations!<br />You Have Completed The Test! 🎉
         </h1>
       </div>
     </div>
