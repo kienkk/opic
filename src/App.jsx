@@ -159,7 +159,10 @@ function pickAudios(folderMap) {
   const remainingNeeded = targetFolderCount - selectedRolePlay.length;
   const selectedNormal = shuffle(normal).slice(0, remainingNeeded);
 
-  const selectedFolders = [...selectedRolePlay, ...selectedNormal];
+   const selectedFolders = shuffle([
+     ...selectedRolePlay,
+     ...selectedNormal
+   ]);
 
   // ===== pick file =====
   let result = [];
