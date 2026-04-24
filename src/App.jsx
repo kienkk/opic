@@ -370,14 +370,15 @@ function FinishedScreen() {
 
 export default function App() {
   const [started, setStarted] = useState(false);
-  const [list, setList] = useState([]);
-  const [index, setIndex] = useState(0);
-  const [mode, setMode] = useState("idle");
-  const [time, setTime] = useState(0);
-  const [maxTime, setMaxTime] = useState(0);
-  const [canNext, setCanNext] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const [uploading, setUploading] = useState(false);
+const [list, setList] = useState([]);
+const [index, setIndex] = useState(0);
+const [mode, setMode] = useState("idle");
+const [time, setTime] = useState(0);
+const [maxTime, setMaxTime] = useState(0);
+const [canNext, setCanNext] = useState(false);
+const [finished, setFinished] = useState(false);
+const [uploading, setUploading] = useState(false);
+const [showReplay, setShowReplay] = useState(false);
 
   const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
@@ -387,6 +388,8 @@ const audioCacheRef = useRef({});
 const audioRef = useRef(null);
 const timerIntervalRef = useRef(null);
 const pendingNextRef = useRef(false);
+const replayTimeoutRef = useRef(null);
+const currentSrcRef = useRef(null);
 
   const fallbackNext = () => {
     setMode("idle");
@@ -420,9 +423,17 @@ const pendingNextRef = useRef(false);
     setTimeout(() => playAudio(picked[0]), 300);
   };
 
-  const playAudio = (src) => {
+  const playAudio = (src, isReplay = false) => {
     setMode("playing");
     setCanNext(false);
+    setShowReplay(false);
+    currentSrcRef.current = src;
+
+    // Clear timeout replay phòng trường hợp còn sót
+    if (replayTimeoutRef.current) {
+      clearTimeout(replayTimeoutRef.current);
+      replayTimeoutRef.current = null;
+    }
 
     const audio = audioCacheRef.current[src];
 
@@ -452,7 +463,17 @@ const pendingNextRef = useRef(false);
     }
 
     audio.onended = () => {
-      setTimeout(() => startRecording(src), 800);
+      if (isReplay) {
+        // Lần phát lại: đi thẳng vào recording, không hiện nút nữa
+        setTimeout(() => startRecording(src), 800);
+      } else {
+        // Lần phát đầu tiên: hiện nút replay, chờ 3 giây
+        setShowReplay(true);
+        replayTimeoutRef.current = setTimeout(() => {
+          setShowReplay(false);
+          startRecording(src);
+        }, 3000);
+      }
     };
 
     audio.onerror = () => {
@@ -462,6 +483,20 @@ const pendingNextRef = useRef(false);
     setTimeout(() => {
       if (!started) fallbackNext();
     }, 4000);
+  };
+
+  const handleReplay = () => {
+    const src = currentSrcRef.current;
+    if (!src) return;
+
+    // Clear timeout 3 giây
+    if (replayTimeoutRef.current) {
+      clearTimeout(replayTimeoutRef.current);
+      replayTimeoutRef.current = null;
+    }
+
+    setShowReplay(false);
+    playAudio(src, true);
   };
 
   const startRecording = async (src) => {
@@ -606,6 +641,13 @@ const pendingNextRef = useRef(false);
 
       <div className="image-box">
         <img src="/image.jpg" alt="" />
+        {showReplay && (
+          <button className="replay-btn" onClick={handleReplay}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="36" height="36">
+              <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-9 9zm7.5-4.5 5 4.5-5 4.5V7.5z"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="timer-bar">
