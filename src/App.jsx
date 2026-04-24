@@ -653,10 +653,25 @@ const listRef = useRef([]);
 
   if (!started) {
     return (
-      <div className="container">
-        <button className="start-btn" onClick={startTest}>
-          START TEST
-        </button>
+      <div className="landing">
+        <div className="landing-card">
+          <div className="landing-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="38" height="38">
+              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V20H9v2h6v-2h-2v-2.07A7 7 0 0 0 19 11h-2z"/>
+            </svg>
+          </div>
+          <h1 className="landing-title">OPIC Practicing App</h1>
+          <p className="landing-sub">15 questions · Speaking test simulation</p>
+          <div className="landing-divider" />
+          <ul className="landing-info">
+            <li>🎧 Listen to each question carefully</li>
+            <li>🎙️ Record your answer when prompted</li>
+            <li>⬇️ Download all recordings at the end</li>
+          </ul>
+          <button className="start-btn" onClick={startTest}>
+            START TEST
+          </button>
+        </div>
       </div>
     );
   }
