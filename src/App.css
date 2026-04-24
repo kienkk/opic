@@ -132,3 +132,30 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* REPLAY BUTTON */
+.image-box {
+  position: relative;
+}
+
+.replay-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition: background 0.2s;
+}
+
+.replay-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
