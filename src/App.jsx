@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+/* ===================== DATA ===================== */
+
 const FOLDER_MAP = {
   "Appointment": [
     "/audios/Appointment/30_Q2 - A.mp3",
@@ -142,35 +144,35 @@ const FOLDER_MAP = {
   ],
 };
 
-function pickAudios(folderMap) {
-  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+/* ===================== HELPERS ===================== */
 
+const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+function pickAudios(folderMap) {
   const folders = Object.keys(folderMap);
 
   const rolePlay = folders.filter(f => f.includes("Role Play"));
   const normal = folders.filter(f => !f.includes("Role Play"));
 
-  // chọn role play ≤ 2
-  const selectedRolePlay = shuffle(rolePlay).slice(0, Math.min(2, rolePlay.length));
+  const selectedRolePlay = shuffle(rolePlay).slice(0, 2);
 
-  // tổng folder = 6 hoặc 7
   const targetFolderCount = 6 + Math.floor(Math.random() * 2);
 
-  const remainingNeeded = targetFolderCount - selectedRolePlay.length;
-  const selectedNormal = shuffle(normal).slice(0, remainingNeeded);
+  const selectedNormal = shuffle(normal).slice(
+    0,
+    targetFolderCount - selectedRolePlay.length
+  );
 
-   const selectedFolders = shuffle([
-     ...selectedRolePlay,
-     ...selectedNormal
-   ]);
+  const selectedFolders = shuffle([
+    ...selectedRolePlay,
+    ...selectedNormal,
+  ]);
 
-  // ===== pick file =====
   let result = [];
   let remaining = 15;
   let remainingFolders = selectedFolders.length;
 
-  for (let i = 0; i < selectedFolders.length; i++) {
-    const folder = selectedFolders[i];
+  for (let folder of selectedFolders) {
     const files = folderMap[folder];
 
     let take;
@@ -178,19 +180,14 @@ function pickAudios(folderMap) {
     if (remainingFolders === 1) {
       take = remaining;
     } else {
-      const minTake = 2;
-      const maxTake = Math.min(3, remaining - (remainingFolders - 1) * 2);
-
-      take = minTake + Math.floor(Math.random() * (maxTake - minTake + 1));
+      const min = 2;
+      const max = Math.min(3, remaining - (remainingFolders - 1) * 2);
+      take = min + Math.floor(Math.random() * (max - min + 1));
     }
 
-    // ⚠️ tránh lấy quá số file có sẵn
     take = Math.min(take, files.length);
 
-    // ⚠️ lấy theo thứ tự
-    const picked = files.slice(0, take);
-
-    result.push(...picked);
+    result.push(...files.slice(0, take));
 
     remaining -= take;
     remainingFolders--;
@@ -199,174 +196,20 @@ function pickAudios(folderMap) {
   return result;
 }
 
-function getDurationFromFileName(src) {
-  const match = src.match(/- ?([ABC])/);
-
-  if (!match) return 60;
-
-  const type = match[1];
-
-  if (type === "A") return 60;
-  if (type === "B") return 90;
-  if (type === "C") return 120;
-
+function getDuration(src) {
+  if (src.includes("- A")) return 60;
+  if (src.includes("- B")) return 90;
+  if (src.includes("- C")) return 120;
   return 60;
 }
 
-function shuffle(array) {
-  return [...array].sort(() => Math.random() - 0.5);
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec < 10 ? "0" : ""}${sec}`;
 }
 
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s < 10 ? "0" : ""}${s}`;
-}
-
-function getRandomTime() {
-  const arr = [6, 5, 4];
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function FinishedScreen() {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    let animId;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const particles = [];
-
-    class Rocket {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = canvas.height;
-        this.vy = -(Math.random() * 6 + 7);
-        this.targetY = Math.random() * canvas.height * 0.5 + 60;
-        this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
-        this.exploded = false;
-        this.trail = [];
-      }
-
-      update() {
-        this.trail.push({ x: this.x, y: this.y });
-        if (this.trail.length > 8) this.trail.shift();
-        this.y += this.vy;
-        if (this.y <= this.targetY && !this.exploded) {
-          this.exploded = true;
-          this.burst();
-        }
-      }
-
-      burst() {
-        const count = 60 + Math.floor(Math.random() * 30);
-        for (let i = 0; i < count; i++) {
-          const angle = (Math.PI * 2 * i) / count;
-          const speed = Math.random() * 4 + 1.5;
-          particles.push({
-            x: this.x,
-            y: this.y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            alpha: 1,
-            color: this.color,
-            size: Math.random() * 2.5 + 1,
-          });
-        }
-      }
-
-      draw() {
-        this.trail.forEach((p, i) => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255,220,100,${(i / this.trail.length) * 0.5})`;
-          ctx.fill();
-        });
-        if (!this.exploded) {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-        }
-      }
-    }
-
-    const rockets = [];
-    let lastLaunch = 0;
-
-    const loop = (ts) => {
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (ts - lastLaunch > 700) {
-        rockets.push(new Rocket());
-        lastLaunch = ts;
-      }
-
-      for (let i = rockets.length - 1; i >= 0; i--) {
-        rockets[i].update();
-        rockets[i].draw();
-        if (rockets[i].exploded && rockets[i].y < -20) rockets.splice(i, 1);
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.07;
-        p.alpha -= 0.018;
-        p.vx *= 0.98;
-        p.vy *= 0.98;
-
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color.replace(")", `, ${p.alpha})`).replace("hsl", "hsla");
-        ctx.fill();
-      }
-
-      animId = requestAnimationFrame(loop);
-    };
-
-    animId = requestAnimationFrame(loop);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh", background: "#000", overflow: "hidden" }}>
-      <canvas ref={canvasRef} style={{ position: "absolute", inset: 0 }} />
-      <div style={{
-        position: "relative", zIndex: 10,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        height: "100%", flexDirection: "column", gap: 12,
-      }}>
-        <h1 style={{
-          color: "#fff", textAlign: "center", fontSize: "clamp(20px, 5vw, 32px)",
-          fontWeight: "bold", textShadow: "0 0 20px rgba(255,220,100,0.8)",
-          padding: "0 20px", margin: 0,
-        }}>
-          🎉 Congratulations!<br />You Have Completed The Test! 🎉
-        </h1>
-      </div>
-    </div>
-  );
-}
+/* ===================== APP ===================== */
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -380,249 +223,170 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
 
   const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const recordingsRef = useRef([]);
-
-  const audioCacheRef = useRef({});
   const audioRef = useRef(null);
+  const intervalRef = useRef(null);
+  const timeoutRef = useRef(null);
 
-  const fallbackNext = () => {
-    setMode("idle");
-    setCanNext(true);
-  };
-
-  useEffect(() => {
-    if (list.length === 0) return;
-    list.forEach((src) => {
-      const audio = new Audio();
-      audio.src = src;
-      audio.preload = "auto";
-      audioCacheRef.current[src] = audio;
-    });
-  }, [list]);
-
-  useEffect(() => {
-    return () => {
-      Object.values(audioCacheRef.current).forEach((audio) => {
-        audio.pause();
-        audio.src = "";
-      });
-    };
-  }, []);
+  /* ===================== START ===================== */
 
   const startTest = () => {
     const picked = pickAudios(FOLDER_MAP);
+
     setList(picked);
     setStarted(true);
     setIndex(0);
+
     setTimeout(() => playAudio(picked[0]), 300);
   };
+
+  /* ===================== AUDIO ===================== */
 
   const playAudio = (src) => {
     setMode("playing");
     setCanNext(false);
 
-    const audio = audioCacheRef.current[src];
-
-    if (!audio) {
-      fallbackNext();
-      return;
-    }
-
+    const audio = new Audio(src);
     audioRef.current = audio;
-    audio.pause();
-    audio.currentTime = 0;
-
-    let started = false;
-
-    const tryPlay = () => {
-      audio.play().then(() => {
-        started = true;
-      }).catch(() => {
-        fallbackNext();
-      });
-    };
-
-    if (audio.readyState >= 3) {
-      tryPlay();
-    } else {
-      audio.oncanplaythrough = tryPlay;
-    }
 
     audio.onended = () => {
-      setTimeout(() => startRecording(src), 800);
+      setTimeout(() => startRecording(src), 500);
     };
 
     audio.onerror = () => {
-      fallbackNext();
+      goNext();
     };
 
-    setTimeout(() => {
-      if (!started) fallbackNext();
-    }, 4000);
+    audio.play().catch(() => goNext());
   };
+
+  /* ===================== RECORD ===================== */
 
   const startRecording = async (src) => {
-  try {
-    const duration = getDurationFromFileName(src);
+    const duration = getDuration(src);
 
-      setMaxTime(duration);
-      setTime(duration);
-      setMode("recording");
-      setCanNext(true);
+    setMode("recording");
+    setTime(duration);
+    setMaxTime(duration);
+    setCanNext(true);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
 
-      mediaRecorder.ondataavailable = (e) => {
-        chunksRef.current.push(e.data);
-      };
+    let chunks = [];
+    let stopped = false;
 
-      let stopped = false;
+    recorder.ondataavailable = (e) => chunks.push(e.data);
 
-      mediaRecorder.onstop = () => {
-        clearTimeout(stopTimeoutId);
-        clearInterval(intervalId);
-        if (stopped) return;
-        stopped = true;
+    recorder.onstop = () => {
+      if (stopped) return;
+      stopped = true;
 
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        recordingsRef.current.push(blob);
+      clearInterval(intervalRef.current);
+      clearTimeout(timeoutRef.current);
 
-        setUploading(true);
+      const blob = new Blob(chunks);
 
-        setTimeout(() => {
-          setUploading(false);
-          setCanNext(true);
-        }, 3000);
+      setUploading(true);
+      setCanNext(false);
 
-        mediaRecorder.stream.getTracks().forEach((t) => t.stop());
-      };
-
-      mediaRecorder.start();
-
-      let t = duration;
-      let intervalId;
-
-      // Delay nhỏ để React kịp render thanh full 100% trước khi transition bắt đầu
       setTimeout(() => {
-        intervalId = setInterval(() => {
-          t--;
+        setUploading(false);
+        goNext();
+      }, 2000);
 
-          if (t <= 0) {
-            clearInterval(intervalId);
-            setTime(0);
-            setTimeout(() => {
-              mediaRecorder.stop();
-            }, 100);
-          } else {
-            setTime(t);
-          }
-        }, 1000);
-      }, 50);
+      stream.getTracks().forEach(t => t.stop());
+    };
 
-    let stopTimeoutId;
+    recorder.start();
 
-      stopTimeoutId = setTimeout(() => {
-  if (!stopped && mediaRecorder.state !== "inactive") {
-    mediaRecorder.stop();
-  }
-}, (duration + 5) * 1000);
+    let t = duration;
 
-    } catch (err) {
-      console.error(err);
-      fallbackNext();
-    }
+    intervalRef.current = setInterval(() => {
+      t--;
+      if (t <= 0) {
+        clearInterval(intervalRef.current);
+        recorder.stop();
+      } else {
+        setTime(t);
+      }
+    }, 1000);
+
+    timeoutRef.current = setTimeout(() => {
+      if (recorder.state !== "inactive") recorder.stop();
+    }, (duration + 5) * 1000);
   };
 
+  /* ===================== NEXT ===================== */
+
   const handleNext = () => {
-  if (!canNext) return;
+    if (!canNext) return;
 
-  // 🔥 nếu đang recording → stop ngay
-  if (mode === "recording" && mediaRecorderRef.current) {
-    try {
-      mediaRecorderRef.current.stop();
-    } catch (e) {}
-  }
+    if (mode === "recording") {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
 
-  if (index + 1 >= list.length) {
-    setFinished(true);
-    return;
-  }
+    goNext();
+  };
 
-  const nextIndex = index + 1;
-  setIndex(nextIndex);
-  audioRef.current?.pause();
+  const goNext = () => {
+    if (index + 1 >= list.length) {
+      setFinished(true);
+      return;
+    }
 
-  setTimeout(() => {
-    playAudio(list[nextIndex]);
-  }, 300);
-};
+    const next = index + 1;
+    setIndex(next);
+
+    setTimeout(() => playAudio(list[next]), 300);
+  };
+
+  /* ===================== UI ===================== */
 
   if (!started) {
     return (
       <div className="container">
-        <button className="start-btn" onClick={startTest}>
-          START TEST
-        </button>
+        <button onClick={startTest}>START TEST</button>
       </div>
     );
   }
 
   if (finished) {
-    return <FinishedScreen />;
+    return <div>🎉 DONE</div>;
   }
 
   return (
     <div className="container">
       <div className="steps">
         {Array.from({ length: 15 }).map((_, i) => (
-          <div key={i} className={`step ${i === index ? "active" : ""}`}>
-            {i + 1}
-          </div>
+          <div key={i}>{i + 1}</div>
         ))}
-      </div>
-
-      <div className="image-box">
-        <img src="/image.jpg" alt="" />
       </div>
 
       <div className="timer-bar">
         <div
-          className="timer-fill"
           style={{
-            width: mode === "recording" ? `${(time / maxTime) * 100}%` : "0%",
-            transition: mode === "recording" && time < maxTime && time > 0
-              ? "width 1s linear"
-              : "none",
+            width:
+              mode === "recording"
+                ? `${(time / maxTime) * 100}%`
+                : "0%",
           }}
         />
       </div>
 
-      <div className="timer-display">
-        {mode === "recording" ? formatTime(time) : ""}
-      </div>
+      <div>{mode === "recording" && formatTime(time)}</div>
 
-      <button
-        className={`next-btn ${canNext ? "active" : "disabled"}`}
-        onClick={handleNext}
-      >
+      <button onClick={handleNext} disabled={!canNext}>
         NEXT
       </button>
 
-      <div className="status">
+      <div>
         {mode === "playing" && "Listening..."}
         {mode === "recording" && "Recording..."}
       </div>
 
-      {uploading && (
-        <div className="overlay">
-          <div className="spinner"></div>
-          <p>Uploading Audio...</p>
-        </div>
-      )}
+      {uploading && <div>Uploading...</div>}
     </div>
   );
 }
