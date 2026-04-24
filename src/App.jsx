@@ -1,23 +1,214 @@
 import { useEffect, useRef, useState } from "react";
 
-const AUDIO_LIST = [
-  "/audios/1.mp3",
-  "/audios/2.mp3",
-  "/audios/3.mp3",
-  "/audios/4.mp3",
-  "/audios/5.mp3",
-  "/audios/6.mp3",
-  "/audios/7.mp3",
-  "/audios/8.mp3",
-  "/audios/9.mp3",
-  "/audios/10.mp3",
-  "/audios/11.mp3",
-  "/audios/12.mp3",
-  "/audios/13.mp3",
-  "/audios/14.mp3",
-  "/audios/15.mp3",
-  "/audios/16.mp3",
-];
+const FOLDER_MAP = {
+  "Appointment": [
+    "/audios/Appointment/30_Q2 - A.mp3",
+    "/audios/Appointment/30_Q3 - B.mp3",
+    "/audios/Appointment/30_Q4 - C.mp3",
+  ],
+  "Bank": [
+    "/audios/Bank/28_Q1 - A.mp3",
+    "/audios/Bank/28_Q3 - B.mp3",
+    "/audios/Bank/28_Q4 - C.mp3",
+  ],
+  "Clothes": [
+    "/audios/Clothes/22_Q1 - A.mp3",
+    "/audios/Clothes/22_Q2 - B.mp3",
+    "/audios/Clothes/22_Q5 - C.mp3",
+  ],
+  "Family": [
+    "/audios/Family/24_Q1 - A.mp3",
+    "/audios/Family/24_Q1 - B.mp3",
+    "/audios/Family/24_Q4 - C.mp3",
+  ],
+  "Food": [
+    "/audios/Food/12_Q1 - A.mp3",
+    "/audios/Food/12_Q1 - B.mp3",
+    "/audios/Food/12_Q5 - C.mp3",
+  ],
+  "Food2": [
+    "/audios/Food2/13_Q2 - A.mp3",
+    "/audios/Food2/13_Q3 - B.mp3",
+    "/audios/Food2/13_Q5 - C.mp3",
+  ],
+  "Furniture": [
+    "/audios/Furniture/10_Q1 - A.mp3",
+    "/audios/Furniture/10_Q3 - B.mp3",
+    "/audios/Furniture/10_Q4 - C.mp3",
+  ],
+  "Geography": [
+    "/audios/Geography/19_Q1 - A.mp3",
+    "/audios/Geography/19_Q4 - B.mp3",
+    "/audios/Geography/19_Q4 - C.mp3",
+  ],
+  "Holiday": [
+    "/audios/Holiday/23_Q1 - A.mp3",
+    "/audios/Holiday/23_Q1 - B.mp3",
+    "/audios/Holiday/23_Q2 - C.mp3",
+  ],
+  "Hotel": [
+    "/audios/Hotel/29_Q2 - A.mp3",
+    "/audios/Hotel/29_Q3 - B.mp3",
+    "/audios/Hotel/29_Q4 - C.mp3",
+  ],
+  "House": [
+    "/audios/House/08_Q1 - A.mp3",
+    "/audios/House/08_Q4 - B.mp3",
+    "/audios/House/08_Q5 - C.mp3",
+  ],
+  "Movie": [
+    "/audios/Movie/06_Q1 - A.mp3",
+    "/audios/Movie/06_Q2 - B.mp3",
+    "/audios/Movie/06_Q3 - C.mp3",
+  ],
+  "Music": [
+    "/audios/Music/05_Q1 - A.mp3",
+    "/audios/Music/05_Q3 - B.mp3",
+    "/audios/Music/05_Q4 - C.mp3",
+  ],
+  "Park": [
+    "/audios/Park/20_Q1 - A.mp3",
+    "/audios/Park/20_Q3 - B.mp3",
+    "/audios/Park/20_Q4 - C.mp3",
+  ],
+  "Recycling": [
+    "/audios/Recycling/10_Q5 - A.mp3",
+    "/audios/Recycling/10_Q6 - B.mp3",
+    "/audios/Recycling/10_Q7 - C.mp3",
+  ],
+  "Restaurant": [
+    "/audios/Restaurant/14_Q1 - A.mp3",
+    "/audios/Restaurant/14_Q2 - B.mp3",
+    "/audios/Restaurant/14_Q6 - C.mp3",
+  ],
+  "Role Play Another Country": [
+    "/audios/Role Play Another Country/33_Q12 - A.mp3",
+    "/audios/Role Play Another Country/33_Q13 - B.mp3",
+    "/audios/Role Play Another Country/33_Q14 - C.mp3",
+  ],
+  "Role Play Appointment": [
+    "/audios/Role Play Appointment/39_Q4 - A.mp3",
+    "/audios/Role Play Appointment/39_Q5 - B.mp3",
+    "/audios/Role Play Appointment/39_Q6 - C.mp3",
+  ],
+  "Role Play Birthday Party": [
+    "/audios/Role Play Birthday Party/40_Q8 - A.mp3",
+    "/audios/Role Play Birthday Party/40_Q9 - B.mp3",
+    "/audios/Role Play Birthday Party/40_Q10 - C.mp3",
+  ],
+  "Role Play Cell Phone": [
+    "/audios/Role Play Cell Phone/35_Q1 - A.mp3",
+    "/audios/Role Play Cell Phone/35_Q2 - B.mp3",
+    "/audios/Role Play Cell Phone/35_Q3 - C.mp3",
+  ],
+  "Role Play Clothes": [
+    "/audios/Role Play Clothes/32_Q1 - A.mp3",
+    "/audios/Role Play Clothes/32_Q2 - B.mp3",
+    "/audios/Role Play Clothes/32_Q3 - C.mp3",
+  ],
+  "Role Play House": [
+    "/audios/Role Play House/36_Q4 - A.mp3",
+    "/audios/Role Play House/36_Q5 - B.mp3",
+    "/audios/Role Play House/36_Q6 - C.mp3",
+  ],
+  "Role Play MP3": [
+    "/audios/Role Play MP3/38_Q1 - A.mp3",
+    "/audios/Role Play MP3/38_Q2 - B.mp3",
+    "/audios/Role Play MP3/38_Q3 - C.mp3",
+  ],
+  "Role Play Park": [
+    "/audios/Role Play Park/40_Q1 - A.mp3",
+    "/audios/Role Play Park/40_Q2 - B.mp3",
+    "/audios/Role Play Park/40_Q3 - C.mp3",
+  ],
+  "Role Play Take Care Home": [
+    "/audios/Role Play Take Care Home/38_Q7 - A.mp3",
+    "/audios/Role Play Take Care Home/38_Q8 - B.mp3",
+    "/audios/Role Play Take Care Home/38_Q9 - C.mp3",
+  ],
+  "Role Play Travelling": [
+    "/audios/Role Play Travelling/33_Q1 - A.mp3",
+    "/audios/Role Play Travelling/33_Q2 - B.mp3",
+  ],
+  "Vacation": [
+    "/audios/Vacation/17_Q1 - A.mp3",
+    "/audios/Vacation/17_Q3 - B.mp3",
+    "/audios/Vacation/17_Q4 - C.mp3",
+  ],
+  "Weather": [
+    "/audios/Weather/26_Q1 - A.mp3",
+    "/audios/Weather/26_Q2 - B.mp3",
+    "/audios/Weather/26_Q3 - C.mp3",
+  ],
+};
+
+function pickAudios(folderMap) {
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+  const folders = Object.keys(folderMap);
+
+  const rolePlay = folders.filter(f => f.includes("Role Play"));
+  const normal = folders.filter(f => !f.includes("Role Play"));
+
+  // chọn role play ≤ 2
+  const selectedRolePlay = shuffle(rolePlay).slice(0, Math.min(2, rolePlay.length));
+
+  // tổng folder = 6 hoặc 7
+  const targetFolderCount = 6 + Math.floor(Math.random() * 2);
+
+  const remainingNeeded = targetFolderCount - selectedRolePlay.length;
+  const selectedNormal = shuffle(normal).slice(0, remainingNeeded);
+
+  const selectedFolders = [...selectedRolePlay, ...selectedNormal];
+
+  // ===== pick file =====
+  let result = [];
+  let remaining = 15;
+  let remainingFolders = selectedFolders.length;
+
+  for (let i = 0; i < selectedFolders.length; i++) {
+    const folder = selectedFolders[i];
+    const files = folderMap[folder];
+
+    let take;
+
+    if (remainingFolders === 1) {
+      take = remaining;
+    } else {
+      const minTake = 2;
+      const maxTake = Math.min(3, remaining - (remainingFolders - 1) * 2);
+
+      take = minTake + Math.floor(Math.random() * (maxTake - minTake + 1));
+    }
+
+    // ⚠️ tránh lấy quá số file có sẵn
+    take = Math.min(take, files.length);
+
+    // ⚠️ lấy theo thứ tự
+    const picked = files.slice(0, take);
+
+    result.push(...picked);
+
+    remaining -= take;
+    remainingFolders--;
+  }
+
+  return result;
+}
+
+function getDurationFromFileName(src) {
+  const match = src.match(/- ?([ABC])/);
+
+  if (!match) return 60;
+
+  const type = match[1];
+
+  if (type === "A") return 60;
+  if (type === "B") return 90;
+  if (type === "C") return 120;
+
+  return 60;
+}
 
 function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
@@ -217,8 +408,8 @@ export default function App() {
   }, []);
 
   const startTest = () => {
-    const random15 = shuffle(AUDIO_LIST).slice(0, 15);
-    setList(random15);
+    const picked = pickAudios(FOLDER_MAP);
+    setList(picked);
     setStarted(true);
     setIndex(0);
     setTimeout(() => playAudio(random15[0]), 300);
@@ -256,7 +447,7 @@ export default function App() {
     }
 
     audio.onended = () => {
-      setTimeout(() => startRecording(), 800);
+      setTimeout(() => startRecording(src), 800);
     };
 
     audio.onerror = () => {
@@ -268,9 +459,9 @@ export default function App() {
     }, 4000);
   };
 
-  const startRecording = async () => {
-    try {
-      const duration = getRandomTime();
+  const startRecording = async (src) => {
+  try {
+    const duration = getDurationFromFileName(src);
 
       setMaxTime(duration);
       setTime(duration);
