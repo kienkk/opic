@@ -228,8 +228,26 @@ function getRandomTime() {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function FinishedScreen() {
+function FinishedScreen({ recordings }) {
   const canvasRef = useRef(null);
+
+  const handleDownload = async () => {
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+
+    recordings.forEach((blob, i) => {
+      const name = `${String(i + 1).padStart(2, "0")}.webm`;
+      zip.file(name, blob);
+    });
+
+    const content = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recordings.zip";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -363,6 +381,22 @@ function FinishedScreen() {
         }}>
           🎉 Congratulations!<br />You Have Completed The Test! 🎉
         </h1>
+        <button
+          onClick={handleDownload}
+          style={{
+            marginTop: 16,
+            padding: "12px 28px",
+            fontSize: 16,
+            fontWeight: "bold",
+            background: "#00c853",
+            color: "white",
+            border: "none",
+            borderRadius: 10,
+            cursor: "pointer",
+          }}
+        >
+          ⬇️ Download Recordings
+        </button>
       </div>
     </div>
   );
@@ -628,8 +662,8 @@ const listRef = useRef([]);
   }
 
   if (finished) {
-    return <FinishedScreen />;
-  }
+  return <FinishedScreen recordings={recordingsRef.current} />;
+}
 
   return (
     <div className="container">
