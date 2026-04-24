@@ -390,6 +390,7 @@ const timerIntervalRef = useRef(null);
 const pendingNextRef = useRef(false);
 const replayTimeoutRef = useRef(null);
 const currentSrcRef = useRef(null);
+const listRef = useRef([]);
 
   const fallbackNext = () => {
     setMode("idle");
@@ -417,6 +418,7 @@ const currentSrcRef = useRef(null);
 
   const startTest = () => {
     const picked = pickAudios(FOLDER_MAP);
+    listRef.current = picked;
     setList(picked);
     setStarted(true);
     setIndex(0);
@@ -580,22 +582,22 @@ const currentSrcRef = useRef(null);
   };
 
   const goToNext = () => {
-    setIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1;
+  setIndex((prevIndex) => {
+    const nextIndex = prevIndex + 1;
 
-      if (nextIndex >= list.length) {
-        setFinished(true);
-        return prevIndex;
-      }
+    if (nextIndex >= listRef.current.length) {
+      setFinished(true);
+      return prevIndex;
+    }
 
-      audioRef.current?.pause();
-      setTimeout(() => {
-        playAudio(list[nextIndex]);
-      }, 300);
+    audioRef.current?.pause();
+    setTimeout(() => {
+      playAudio(listRef.current[nextIndex]);
+    }, 300);
 
-      return nextIndex;
-    });
-  };
+    return nextIndex;
+  });
+};
 
   const handleNext = () => {
     if (!canNext) return;
