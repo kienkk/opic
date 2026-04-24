@@ -380,11 +380,13 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
 
   const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const recordingsRef = useRef([]);
+const chunksRef = useRef([]);
+const recordingsRef = useRef([]);
 
-  const audioCacheRef = useRef({});
-  const audioRef = useRef(null);
+const audioCacheRef = useRef({});
+const audioRef = useRef(null);
+const timerIntervalRef = useRef(null);
+const pendingNextRef = useRef(false);
 
   const fallbackNext = () => {
     setMode("idle");
@@ -489,17 +491,27 @@ export default function App() {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         recordingsRef.current.push(blob);
 
+        setCanNext(false); // Disable Next trong lúc uploading
         setUploading(true);
 
         setTimeout(() => {
           setUploading(false);
-          setCanNext(true);
+
+          if (pendingNextRef.current) {
+            // Người dùng đã bấm Next trong lúc recording → tự động chuyển câu
+            pendingNextRef.current = false;
+            goToNext();
+          } else {
+            // Hết giờ tự nhiên → mở nút Next bình thường
+            setCanNext(true);
+          }
         }, 3000);
 
         mediaRecorder.stream.getTracks().forEach((t) => t.stop());
       };
 
       mediaRecorder.start();
+      setCanNext(true); // Cho phép bấm Next ngay khi recording bắt đầu
 
       let t = duration;
 
@@ -510,14 +522,16 @@ export default function App() {
 
           if (t <= 0) {
             clearInterval(interval);
+            timerIntervalRef.current = null;
             setTime(0);
             setTimeout(() => {
-              mediaRecorder.stop();
+              if (!stopped) mediaRecorder.stop();
             }, 100);
           } else {
             setTime(t);
           }
         }, 1000);
+        timerIntervalRef.current = interval;
       }, 50);
 
       setTimeout(() => {
@@ -530,21 +544,40 @@ export default function App() {
     }
   };
 
+  const goToNext = () => {
+    setIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+
+      if (nextIndex >= list.length) {
+        setFinished(true);
+        return prevIndex;
+      }
+
+      audioRef.current?.pause();
+      setTimeout(() => {
+        playAudio(list[nextIndex]);
+      }, 300);
+
+      return nextIndex;
+    });
+  };
+
   const handleNext = () => {
     if (!canNext) return;
 
-    if (index + 1 >= list.length) {
-      setFinished(true);
+    if (mode === "recording" && mediaRecorderRef.current?.state === "recording") {
+      // Bấm Next khi đang recording: dừng timer, đánh dấu pending, stop recorder
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      pendingNextRef.current = true;
+      mediaRecorderRef.current.stop();
+      // onstop sẽ lo phần còn lại (spinner → goToNext)
       return;
     }
 
-    const nextIndex = index + 1;
-    setIndex(nextIndex);
-    audioRef.current?.pause();
-
-    setTimeout(() => {
-      playAudio(list[nextIndex]);
-    }, 300);
+    goToNext();
   };
 
   if (!started) {
