@@ -11,6 +11,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100dvh;
   gap: 20px;
   padding: 20px;
 }
@@ -26,7 +27,7 @@ body {
 .step {
   width: 28px;
   height: 28px;
-  background: orange;
+  background: #90caf9;
   color: white;
   display: flex;
   align-items: center;
@@ -38,6 +39,7 @@ body {
 
 .step.active {
   opacity: 1;
+  background: #1a73e8;
   transform: scale(1.2);
 }
 
@@ -85,7 +87,7 @@ body {
 }
 
 .next-btn.active {
-  background: #00c853;
+  background: #ffab40;
   color: white;
 }
 
@@ -163,6 +165,7 @@ body {
 /* LANDING PAGE */
 .landing {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
