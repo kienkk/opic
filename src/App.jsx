@@ -412,7 +412,7 @@ export default function App() {
     setList(picked);
     setStarted(true);
     setIndex(0);
-    setTimeout(() => playAudio(random15[0]), 300);
+    setTimeout(() => playAudio(picked[0]), 300);
   };
 
   const playAudio = (src) => {
