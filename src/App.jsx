@@ -469,7 +469,7 @@ export default function App() {
       setMaxTime(duration);
       setTime(duration);
       setMode("recording");
-      setCanNext(false);
+      setCanNext(true);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -502,14 +502,15 @@ export default function App() {
       mediaRecorder.start();
 
       let t = duration;
+      let intervalId;
 
       // Delay nhỏ để React kịp render thanh full 100% trước khi transition bắt đầu
       setTimeout(() => {
-        const interval = setInterval(() => {
+        intervalId = setInterval(() => {
           t--;
 
           if (t <= 0) {
-            clearInterval(interval);
+            clearInterval(intervalId);
             setTime(0);
             setTimeout(() => {
               mediaRecorder.stop();
@@ -521,8 +522,10 @@ export default function App() {
       }, 50);
 
       setTimeout(() => {
-        if (!stopped) mediaRecorder.stop();
-      }, (duration + 5) * 1000);
+  if (!stopped && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+}, (duration + 5) * 1000);
 
     } catch (err) {
       console.error(err);
@@ -531,21 +534,28 @@ export default function App() {
   };
 
   const handleNext = () => {
-    if (!canNext) return;
+  if (!canNext) return;
 
-    if (index + 1 >= list.length) {
-      setFinished(true);
-      return;
-    }
+  // 🔥 nếu đang recording → stop ngay
+  if (mode === "recording" && mediaRecorderRef.current) {
+    try {
+      mediaRecorderRef.current.stop();
+    } catch (e) {}
+  }
 
-    const nextIndex = index + 1;
-    setIndex(nextIndex);
-    audioRef.current?.pause();
+  if (index + 1 >= list.length) {
+    setFinished(true);
+    return;
+  }
 
-    setTimeout(() => {
-      playAudio(list[nextIndex]);
-    }, 300);
-  };
+  const nextIndex = index + 1;
+  setIndex(nextIndex);
+  audioRef.current?.pause();
+
+  setTimeout(() => {
+    playAudio(list[nextIndex]);
+  }, 300);
+};
 
   if (!started) {
     return (
