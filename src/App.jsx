@@ -483,6 +483,8 @@ export default function App() {
       let stopped = false;
 
       mediaRecorder.onstop = () => {
+        clearTimeout(stopTimeoutId);
+        clearInterval(intervalId);
         if (stopped) return;
         stopped = true;
 
@@ -521,7 +523,9 @@ export default function App() {
         }, 1000);
       }, 50);
 
-      setTimeout(() => {
+    let stopTimeoutId;
+
+      stopTimeoutId = setTimeout(() => {
   if (!stopped && mediaRecorder.state !== "inactive") {
     mediaRecorder.stop();
   }
