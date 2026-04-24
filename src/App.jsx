@@ -487,7 +487,9 @@ const listRef = useRef([]);
     const tryPlay = () => {
       audio.play().then(() => {
         started = true;
-      }).catch(() => {
+        console.log(`[play] success src=${src}, duration=${audio.duration}`);
+      }).catch((err) => {
+        console.log(`[play] error src=${src}`, err);
         fallbackNext();
       });
     };
@@ -498,7 +500,10 @@ const listRef = useRef([]);
       audio.oncanplaythrough = tryPlay;
     }
 
+    console.log(`[playAudio] src=${src}, readyState=${audio.readyState}, isReplay=${isReplay}`);
+
     audio.onended = () => {
+      console.log(`[onended] fired for src=${src}`);
       if (isReplay) {
         // Lần phát lại: đi thẳng vào recording, không hiện nút nữa
         setTimeout(() => startRecording(src), 800);
